@@ -36,7 +36,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["54:77:b2:48:a9:bf:01:c7:16:fe:9b:09:69:77:6a:5c"]
-      - attach_to_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: Install Ansible
