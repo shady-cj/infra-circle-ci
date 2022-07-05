@@ -8,19 +8,37 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  create-infrastructure:
-    docker: 
-      - image: amazon/aws-cli
+  # create-infrastructure:
+  # docker: 
+  #   - image: amazon/aws-cli
+  # steps:
+  #   - checkout
+  #   - run:
+  #       name: Create Cloudformation stack
+  #       command: |
+  #         aws cloudformation deploy \
+  #       --template-file template.yml \
+  #        --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+  #          --region us-east-1
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints: ["54:77:b2:48:a9:bf:01:c7:16:fe:9b:09:69:77:6a:5c"]
       - run:
-          name: Create Cloudformation stack
+          name: Install Ansible
           command: |
-            aws cloudformation deploy \
-            --template-file template.yml \
-            --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-            --region us-east-1
+            python3 -m pip install --user ansible
+      - run:
+          name: Run playbook and configure server
+          command: |
+            ansible-playbook main-remote.yml -i inventory-2
+
 workflows:
   Infrastructure:
     jobs:
-      - create-infrastructure
+      # - create-infrastructure
+      - configure-infrastructure
