@@ -5,8 +5,13 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+commands:
+  destroy_environment:
+    steps:
+      run:
+        name: Destroy the infrastructures
+        command: | 
+          aws cloudformation delete-stack --stack-name myStack-$CIRCLE_WORKFLOW_ID:0:5
 jobs:
   create-infrastructure:
     docker: 
@@ -59,7 +64,7 @@ jobs:
       - run: 
           name: smoke test
           command: |
-            URL="https://blog.udacity.com/"
+            URL="https://blog.udacit673737y.com/"
 
             if curl -s --head $URL
             then
@@ -67,12 +72,16 @@ jobs:
             else
               return 1 
             fi
+      - destroy_environment:
+          when: on_fail
 
 workflows:
   Infrastructure:
     jobs:
-      - smoke_test
-      #- create-infrastructure
-        #- configure-infrastructure:
-        #   requires:
-        #   - create-infrastructure
+      - create-infrastructure
+      - configure-infrastructure:
+          requires:
+            - create-infrastructure
+      - smoke_test:
+          requires:
+            - configure-infrastructure
