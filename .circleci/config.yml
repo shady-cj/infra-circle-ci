@@ -16,18 +16,6 @@ jobs:
       - run:
           name: Create Cloudformation stack
           command:  ./cf.sh template.yml myStack-${CIRCLE_WORKFLOW_ID:0:5} us-east-1
-  configure-infrastructure:
-    docker:
-      - image: python:3.7-alpine3.16
-    
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["54:77:b2:48:a9:bf:01:c7:16:fe:9b:09:69:77:6a:5c"]
-      - run:
-          name: Install Ansible
-          command: |
-            apk add --update ansible
       - run:
           name: Update inventory file
           command: |
@@ -36,10 +24,28 @@ jobs:
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --filters "Name=tag:Project,Values=udacity" \
             --output text >> inventory-2
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - inventory-2
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.16
+    
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["54:77:b2:48:a9:bf:01:c7:16:fe:9b:09:69:77:6a:5c"]
+      - attach_to_workspace:
+          at: ./
+      - run:
+          name: Install Ansible
+          command: |
+            apk add --update ansible
       - run:
           name: Run playbook and configure server
           command: |
-            ansible-playbook main-remote.yml -i inventory-2
+            ansible-playbook main-remote.yml -i ./inventory-2
 
 workflows:
   Infrastructure:
