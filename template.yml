@@ -18,5 +18,8 @@ Resources:
       KeyName: CJ
       ImageId: ami-052efd3df9dad4825
       InstanceType: t2.micro
+      Tags:
+        - Key: Project
+          Value: udacity
 
 

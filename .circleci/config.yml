@@ -8,18 +8,14 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  # create-infrastructure:
-  # docker: 
-  #   - image: amazon/aws-cli
-  # steps:
-  #   - checkout
-  #   - run:
-  #       name: Create Cloudformation stack
-  #       command: |
-  #         aws cloudformation deploy \
-  #       --template-file template.yml \
-  #        --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-  #          --region us-east-1
+  create-infrastructure:
+    docker: 
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create Cloudformation stack
+          command:  ./cf.sh template.yml myStack-${CIRCLE_WORKFLOW_ID:0:5} us-east-1
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.16
@@ -33,6 +29,14 @@ jobs:
           command: |
             apk add --update ansible
       - run:
+          name: Update inventory file
+          command: |
+            echo '[all]' > inventory-2
+            aws --region us-east-1 ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:Project,Values=udacity" \
+            --output text >> inventory-2
+      - run:
           name: Run playbook and configure server
           command: |
             ansible-playbook main-remote.yml -i inventory-2
@@ -40,5 +44,7 @@ jobs:
 workflows:
   Infrastructure:
     jobs:
-      # - create-infrastructure
-      - configure-infrastructure
+      - create-infrastructure
+      - configure-infrastructure:
+          requires:
+            - create-infrastructure
