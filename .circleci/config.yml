@@ -21,6 +21,6 @@ jobs:
             --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
             --region us-east-1
 workflows:
-  say-hello-workflow:
+  Infrastructure:
     jobs:
       - create-infrastructure
